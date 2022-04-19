@@ -1,8 +1,12 @@
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 
@@ -54,6 +58,41 @@ public class CryptoUtilImpl {
         cipher.init(Cipher.DECRYPT_MODE,secretKey);
         byte[] decryptedBytes = cipher.doFinal(decodeEcryptedData);
         return decryptedBytes;
+    }
+
+    //****************************** RSA Asymetric Encryption *****************************************
+
+    public KeyPair generateKeyPair() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(1024);
+        return keyPairGenerator.generateKeyPair();
+    }
+    public PublicKey publicKey(String pkBase64) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        byte[] decode = Base64.getDecoder().decode(pkBase64);
+        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(decode));
+        return publicKey;
+    }
+
+    public PrivateKey privateKey(String pkBase64) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        byte[] decode = Base64.getDecoder().decode(pkBase64);
+        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decode));
+        return privateKey;
+    }
+
+    public String encryptRSA(byte[] data, PublicKey publicKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE,publicKey);
+        byte[] bytes = cipher.doFinal(data);
+        return encodeToBase64(bytes);
+    }
+
+    public String decryptRSA(String dataBase64, PrivateKey privateKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE,privateKey);
+        byte[] bytes = cipher.doFinal(Base64.getDecoder().decode(dataBase64));
+        return new String(bytes);
     }
 
 }
