@@ -4,7 +4,11 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -93,6 +97,22 @@ public class CryptoUtilImpl {
         cipher.init(Cipher.DECRYPT_MODE,privateKey);
         byte[] bytes = cipher.doFinal(Base64.getDecoder().decode(dataBase64));
         return new String(bytes);
+    }
+
+    public PublicKey publicKeyFromCertification(String filename) throws Exception {
+        FileInputStream inputStream = new FileInputStream(filename);
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        Certificate certificate = certificateFactory.generateCertificate(inputStream);
+        System.out.println(certificate.toString());
+        return certificate.getPublicKey();
+    }
+    public PrivateKey privateKeyFromCertification(String filename,String password, String alias) throws Exception {
+        FileInputStream inputStream = new FileInputStream(filename);
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(inputStream,password.toCharArray());
+        Key key = keyStore.getKey(alias, password.toCharArray());
+        PrivateKey privateKey = (PrivateKey)key ;
+        return privateKey;
     }
 
 }
